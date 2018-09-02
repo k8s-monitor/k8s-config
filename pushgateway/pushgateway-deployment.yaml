@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pushgateway
+  namespace: kube-system
+  labels:
+    k8s-app: pushgateway
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: pushgateway
+  template:
+    metadata:
+      labels:
+        k8s-app: pushgateway
+    spec:
+      containers:
+      - image: prom/pushgateway:v0.5.2
+        name: pushgateway
+        ports:
+        - containerPort: 9091
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 500Mi
+          limits:
+            cpu: 1000m
+            memory: 1000Mi

@@ -1,0 +1,101 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: am-dmt-1
+  namespace: kube-system
+  labels:
+    k8s-app: alertmanager-ha-deployment
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app-instance: alertmanager1
+  template:
+    metadata:
+      labels:
+        k8s-app: alertmanager
+        k8s-app-instance: alertmanager1
+    spec:
+      containers:
+      - image: prom/alertmanager:v0.15.1
+        name: alertmanager
+        args:
+        - --config.file=/etc/alertmanager/alertmanager.yml
+        - --storage.path=/alertmanager
+        - --cluster.listen-address=0.0.0.0:9094
+        - --cluster.peer=10.96.95.70:9094
+        ports:
+        - containerPort: 9093
+          protocol: TCP
+        volumeMounts:
+        - name: alertmanager-config-volume
+          mountPath: /etc/alertmanager
+        - name: alert-storage
+          mountPath: /alert-data
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 200Mi
+      volumes:
+      - name: alert-storage
+        emptyDir: {}
+      - name: alertmanager-config-volume
+        configMap:
+          name: alertmanager-config
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: am-dmt-2
+  namespace: kube-system
+  labels:
+    k8s-app: alertmanager-ha-deployment
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app-instance: alertmanager2
+  template:
+    metadata:
+      labels:
+        k8s-app: alertmanager
+        k8s-app-instance: alertmanager2
+    spec:
+      containers:
+      - image: prom/alertmanager:v0.15.1
+        name: alertmanager
+        args:
+        - --config.file=/etc/alertmanager/alertmanager.yml
+        - --storage.path=/alertmanager
+        - --cluster.listen-address=0.0.0.0:9094
+        - --cluster.peer=10.110.187.132:9094
+        ports:
+        - containerPort: 9093
+          protocol: TCP
+        volumeMounts:
+        - name: alertmanager-config-volume
+          mountPath: /etc/alertmanager
+        - name: alert-storage
+          mountPath: /alert-data
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 200Mi
+      volumes:
+      - name: alert-storage
+        emptyDir: {}
+      - name: alertmanager-config-volume
+        configMap:
+          name: alertmanager-config

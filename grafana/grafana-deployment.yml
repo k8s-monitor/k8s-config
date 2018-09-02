@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:5.2.1
+        ports:
+        - containerPort: 8090
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /grafana-config
+          name: config-volume
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
+          limits:
+            cpu: 200m
+            memory: 2000Mi
+        env:
+        - name: GF_SERVER_HTTP_PORT
+          value: "8090"
+        - name: GF_AUTH_LDAP_ENABLED
+          value: "true"
+        - name: GF_AUTH_LDAP_CONFIG_FILE
+          value: "/grafana-config/ldap.toml"
+        - name: GF_AUTH_LDAP_ALLOW_SIGN_UP
+          value: "true"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: grafana-config

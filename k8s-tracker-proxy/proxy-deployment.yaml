@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: k8s-tracker-proxy-dpm
+  namespace: kube-system
+  labels:
+    k8s-app: k8s-tracker-proxy
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: k8s-tracker-proxy
+  template:
+    metadata:
+      labels:
+        k8s-app: k8s-tracker-proxy
+    spec:
+      containers:
+      - image: k8s-monitor/k8s-tracker-proxy:0.1.0
+        imagePullPolicy: "IfNotPresent"
+        name: k8s-tracker-proxy
+        ports:
+        - containerPort: 8189
+          protocol: TCP
+        env:
+        - name: "server.port"
+          value: "8189"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
+          limits:
+            cpu: 500m
+            memory: 1000Mi
+       

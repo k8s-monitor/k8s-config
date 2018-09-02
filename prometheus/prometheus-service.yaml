@@ -1,0 +1,33 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels: 
+    kubernetes.io/name: "Prometheus"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: prometheus
+  namespace: kube-system
+spec:
+  type: NodePort
+  sessionAffinity: ClientIP
+  ports:
+  - port: 9090
+    targetPort: 9090
+    #nodePort: 30003
+  selector:
+    k8s-app: prometheus    
+    
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-prometheus
+  namespace: kube-system
+spec:
+  rules:
+  - host: prometheus.k8s.dapp.com
+    http:
+      paths:
+      - backend:
+          serviceName: prometheus
+          servicePort: 9090

@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus
+  namespace: kube-system
+  labels:
+    k8s-app: prometheus
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    version: v2.2.1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: prometheus
+  template:
+    metadata:
+      labels:
+        k8s-app: prometheus
+    spec:
+      securityContext:
+        runAsUser: 0   
+      containers:
+      - image: prom/prometheus:v2.2.1
+        imagePullPolicy: "IfNotPresent"
+        name: prometheus
+        command:
+        - "/bin/prometheus"
+        args:
+        - "--config.file=/etc/prometheus/config/prometheus.yml"
+        - "--storage.tsdb.path=/prom-data"
+        - "--storage.tsdb.retention=15d"
+        - "--web.enable-lifecycle"
+        ports:
+        - containerPort: 9090
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/prom-data"
+          name: prom-storage         
+        - mountPath: "/etc/prometheus/config"
+          name: config-volume
+        - mountPath: "/etc/prometheus/rule"
+          name: rule-volume  
+          
+        resources:
+          requests:
+            cpu: 100m
+            memory: 500Mi
+          limits:
+            cpu: 500m
+            memory: 2000Mi
+      serviceAccountName: prometheus
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-config
+      - name: rule-volume
+        configMap:
+          name: prometheus-rules    
+  volumeClaimTemplates:
+  - metadata:
+      name: prom-storage
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: "10Gi"
+      selector:
+        matchLabels:
+        k8s-app: prometheus
+                  
